@@ -1,0 +1,28 @@
+# {{ ansible_managed }}
+
+{% for view in bind_views %}
+view "{{ view.name }}" {
+  empty-zones-enable  no;
+{% if view.match_clients|default(false) %}
+	match-clients       { {{ view.match_clients|join('; ') }}; };
+{% endif %}
+{% if view.match_destinations|default(false) %}
+	match-destinations { {{ view.match_destinations|join('; ') }}; };
+{% endif %}
+	recursion           {{ view.recursion | default('yes') }};
+
+	include             "/etc/named/named.default-zones.conf";
+
+{% for zone in bind_auth_zones|default([]) %}
+{% if view.name in zone.views %}
+	include             "/etc/named/zones/{{ zone.name }}.conf";
+{% endif %}
+{% endfor %}
+{% for zone in bind_forward_zones|default([]) %}
+{% if view.name in zone.views %}
+	include             "/etc/named/zones/{{ zone.name }}.conf";
+{% endif %}
+{% endfor %}
+};
+
+{% endfor %}

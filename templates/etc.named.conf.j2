@@ -1,0 +1,89 @@
+# {{ ansible_managed }}
+
+{% for acl in bind_acls|default([]) %}
+acl "{{ acl.name }}" {
+  {{ acl.addresses|join('; ') }};
+};
+{% endfor %}
+
+{% if bind_update_key %}
+key {{ bind_update_key.name }} {
+    algorithm   {{ bind_update_key.algorithm }};
+    secret      "{{ bind_update_key.secret }}";
+};
+{% endif %}
+
+{% if bind_transfer_key %}
+key {{ bind_transfer_key.name }} {
+    algorithm   {{ bind_transfer_key.algorithm }};
+    secret      "{{ bind_transfer_key.secret }}";
+};
+
+{% for ip in bind_servers %}
+server {{ ip }} { keys { {{ bind_transfer_key.name }}; }; };
+{% endfor %}
+{% endif %}
+
+include "/etc/rndc.key";
+include "/etc/named/views.conf";
+
+controls {
+    inet 127.0.0.1 allow { 127.0.0.1; } keys { rndc-key; };
+};
+
+options {
+	listen-on           port 53 { any; };
+	listen-on-v6        port 53 { ::1; };
+
+	directory           "/var/named";
+
+	dump-file           "/var/named/data/cache_dump.db";
+    statistics-file     "/var/named/data/named_stats.txt";
+    memstatistics-file  "/var/named/data/named_mem_stats.txt";
+{% if bind_allow_query|default(false) %}
+	allow-query         { {{ bind_allow_query|join('; ') }}; localhost; };
+{% endif %}
+{% if bind_allow_recursion|default(false) %}
+	allow-recursion     { {{ bind_allow_recursion|join('; ') }}; localhost; };
+{% endif %}
+{% if bind_transfer_key %}
+	allow-transfer      { key {{ bind_transfer_key.name }}; };
+{% endif %}
+
+{% if bind_forwarders|default(false) %}
+    fowarders           { {{ bind_forwarders|join('; ') }}; };
+{% endif %}
+
+    version             "[secured]";
+	recursion           {{ bind_recursion | default('yes') }};
+
+	dnssec-enable       no;
+	dnssec-validation   no;
+	dnssec-lookaside    auto;
+
+	/* Path to ISC DLV key */
+	bindkeys-file       "/etc/named.iscdlv.key";
+
+	managed-keys-directory "/var/named/dynamic";
+};
+
+logging {
+        channel default_log {
+                syslog daemon;
+                print-time yes;
+                print-category yes;
+                severity info;
+                };
+        channel security_log {
+                syslog security;
+                print-time yes;
+                print-category yes;
+                severity notice;
+                };
+        category default { default_log; };
+        category security { security_log; };
+        category lame-servers { null; };
+};
+
+
+include "/etc/named.root.key";

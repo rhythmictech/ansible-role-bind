@@ -1,0 +1,23 @@
+# {{ ansible_managed | default('Managed by Ansible') }}
+
+zone "{{ item.domain is defined | ternary(item.domain, item.name) }}" {
+{% if bind_master == ansible_default_ipv4.address %}
+    type            master;
+{% if item.dynamic | default(false) %}
+    file            "dynamic/{{ item.name }}";
+{% if bind_update_key | default(false) %}
+    allow-update    { key {{ bind_update_key.name }}; };
+{% endif %}
+{% else %}
+    file            "data/{{ item.name }}";
+{% endif %}
+{% else %}
+    type            slave;
+    file            "slaves/{{ item.name }}";
+    masters         { {{ bind_master }}; };
+{% endif %}
+{% if item.allow_query|default(false) %}
+    allow-query     { {{ item.allow_query | join('; ') }}; };
+{% endif %}
+
+};

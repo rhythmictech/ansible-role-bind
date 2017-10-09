@@ -1,0 +1,9 @@
+# {{ ansible_managed | default('Managed by Ansible') }}
+
+zone "{{ item.domain is defined | ternary(item.domain, item.name) }}" {
+    type            forward;
+    forwarders      { {{ item.forwarders|join('; ') }}; };
+{% if item.allow_query|default(false) %}
+    allow-query     { {{ item.allow_query | join('; ') }}; };
+{% endif %}
+};

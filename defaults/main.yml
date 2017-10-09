@@ -1,0 +1,67 @@
+---
+# Global config options
+
+# List of hashes describing authoritative zones
+#  name: name of zone, used as domain if domain not defined
+#  domain: domain name of zone, name used if undefined, optional
+#  dynamic: set to true if dynamic updates allowed, defaults to false
+#  allow_query: list of acls allowed to query zone, optional
+#  views: list of views to include zone in
+bind_auth_zones: []
+
+# List of hashes describing forwarded zones
+#  name: name of zone, used as domain if domain not defined
+#  domain: domain name of zone, name used if undefined, optional
+#  forwarders: list of IP addresses for forwarders for this zone
+#  allow_query: list of acls allowed to query zone, optional
+#  views: list of views to include zone in
+bind_forward_zones: []
+
+# IP address of master server for all zones
+bind_master: ''
+
+# Optional dnssec key for signing transfers
+#  name: name of key used in bind config
+#  algorithm: name of supported encryption algorithm
+#  secret: generated key
+bind_transfer_key: {}
+
+# Optional dnssec key for securing zone updates
+#  name: name of key used in bind config
+#  algorithm: name of supported encryption algorithm
+#  secret: generated key
+bind_update_key: {}
+
+# Optional list of acl names allowed to query server
+bind_allow_query: []
+
+# Optional list of acl names allow to use recursive queries
+bind_allow_recursion: []
+
+# Optional list of forwarder servers to use
+bind_forwarders: []
+
+# Allow recursive queries, boolean
+bind_recursion: 'yes'
+
+# HMAC-MD5 encrypted secret for rndc control
+bind_rndc_secret: ''
+
+# ACL definitions
+#  bind_acls:
+#    - name: queryrange
+#      addresses:
+#        - 10.0.0.0/16
+bind_acls: []
+
+# List of hashes for defining bind views
+# bind_views
+#   - name: view1
+#     match_clients: ['acl1', 'acl2']
+#     match_destinations: []
+#     recursion: 'yes'
+#   - name: default
+#
+bind_views:
+  - name: default
+

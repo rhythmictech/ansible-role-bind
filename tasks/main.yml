@@ -1,0 +1,85 @@
+---
+# tasks for bind
+- name: ensure packages are installed
+  yum: name={{ item }} state=present
+  with_items:
+    - bind
+    - bind-chroot
+    - bind-utils
+  tags: ['bind']
+
+- name: ensure bind dirs are created
+  file: path="{{ item }}" state=directory owner=root group=named mode=0750
+  with_items:
+    - /etc/named
+    - /etc/named/zones
+  tags: ['bind']
+
+- name: place the default zone config
+  copy: src=etc.named.named.default-zones.conf dest=/etc/named/named.default-zones.conf owner=root group=named mode=0640
+  tags: ['bind']
+
+- name: place the auth zone config files
+  template:
+    src: etc.named.zones.zone.conf.j2
+    dest: "/etc/named/zones/{{ item.name }}.conf"
+    owner: root
+    group: named
+    mode: 0640
+  with_items: "{{ bind_auth_zones }}"
+  notify: reload named
+  tags: ['bind']
+
+- name: place the auth zone files
+  template:
+    src: zoneskel.j2
+    dest: "/var/named/{{ item.dynamic|ternary('dynamic','data') }}/{{ item.name }}"
+    owner: named
+    group: named
+    mode: 0640
+    force: no
+  with_items: "{{ bind_auth_zones }}"
+  when: bind_master == ansible_default_ipv4.address
+  notify: reload named
+  tags: ['bind']
+
+- name: place the forward zone config files
+  template:
+    src: etc.named.zones.forward_zone.conf.j2
+    dest: "/etc/named/zones/{{ item.name }}.conf"
+    owner: root
+    group: named
+    mode: 0640
+  with_items: "{{ bind_forward_zones }}"
+  notify: reload named
+  tags: ['bind']
+
+- name: place the view config file
+  template: 
+    src: etc.named.views.conf.j2
+    dest: /etc/named/views.conf
+    owner: root
+    group: named
+    mode: 0640
+  notify: reload named
+  tags: ['bind']
+
+- name: place the /etc/rndc.key file
+  template: 
+    src: etc.rndc.key.j2
+    dest: /etc/rndc.key
+    owner: root
+    group: named
+    mode: 0640
+  notify: restart named
+  tags: ['bind']
+
+- name: place the /etc/named.conf file
+  template: src=etc.named.conf.j2 dest=/etc/named.conf owner=root group=named mode=0640
+  notify: restart named
+  tags: ['bind']
+
+- name: ensure named is running and enabled
+  service: name=named state=started enabled=true
+  tags: ['bind']
+
