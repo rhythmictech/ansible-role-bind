@@ -1,11 +1,21 @@
 # {{ ansible_managed | default('Managed by Ansible') }}
 
+{% if item.update_key |default (false) %}
+key {{ item.update_key.name }} {
+    algorithm   {{ item.update_key.algorithm }};
+    secret      "{{ item.update_key.secret }}";
+};
+{% endif %}
+
 zone "{{ item.domain is defined | ternary(item.domain, item.name) }}" {
 {% if bind_master == ansible_default_ipv4.address %}
     type            master;
 {% if item.dynamic | default(false) %}
     file            "dynamic/{{ item.name }}";
-{% if bind_update_key | default(false) %}
+
+{% if item.update_key | default (false) %}
+    allow-update    { key {{ item.update_key.name }}; };
+{% elif bind_update_key | default(false) %}
     allow-update    { key {{ bind_update_key.name }}; };
 {% endif %}
 {% else %}
