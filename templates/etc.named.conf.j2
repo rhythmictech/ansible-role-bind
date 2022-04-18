@@ -51,7 +51,7 @@ options {
 {% endif %}
 
 {% if bind_forwarders|default(false) %}
-    fowarders           { {{ bind_forwarders|join('; ') }}; };
+    forwarders          { {{ bind_forwarders|join('; ') }}; };
 {% endif %}
 
     version             "[secured]";
