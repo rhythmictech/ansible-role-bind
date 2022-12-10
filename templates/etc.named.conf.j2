@@ -31,6 +31,12 @@ controls {
     inet 127.0.0.1 allow { 127.0.0.1; } keys { rndc-key; };
 };
 
+{% if bind_enable_statistics_channel %}
+statistics-channels {
+  inet 127.0.0.1 port {{ bind_statistics_channel_port }} allow { 127.0.0.1; };
+};
+{% endif %}
+
 options {
 	listen-on           port 53 { any; };
 	listen-on-v6        port 53 { ::1; };

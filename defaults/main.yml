@@ -1,6 +1,11 @@
 ---
 # Global config options
 
+# Options to enable and configure a statistics channel on localhost
+# This is useful if you want to use a bind_exporter for Prometheus
+bind_enable_statistics_channel: false
+bind_statistics_channel_port: 8053
+
 # List of hashes describing authoritative zones
 #  name: name of zone, used as domain if domain not defined
 #  domain: domain name of zone, name used if undefined, optional
